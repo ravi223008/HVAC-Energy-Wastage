@@ -1,0 +1,7 @@
+[theme]
+base = "dark"
+primaryColor = "#00B4D8"        # aviation blue
+backgroundColor = "#0E1117"     # dark terminal
+secondaryBackgroundColor = "#1A1F2B"
+textColor = "#FAFAFA"
+font = "sans serif"
