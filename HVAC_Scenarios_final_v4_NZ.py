@@ -7,6 +7,7 @@ import time
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import streamlit.components.v1 as components
 
 # =====================================================================
 # PAGE CONFIG & AUTO REFRESH
@@ -93,24 +94,39 @@ h1 {
     gap: 10px;
 }
 
-/* Strategic Differentiation Styling */
+/* Strategic Differentiation Styling - BALANCED UI */
 .diff-box {
-    padding: 25px;
+    padding: 30px;
     border-radius: 12px;
     margin-bottom: 15px;
-    min-height: 450px; /* Ensures both boxes are the same height */
+    min-height: 520px; /* Ensures symmetry across both cards */
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 .fdd-box { 
-    background-color: #f8fafc; 
+    background-color: #ffffff; 
     border: 1px solid #e2e8f0; 
-    border-left: 6px solid #64748b;
+    border-top: 6px solid #64748b;
 }
 .el-box { 
-    background-color: #f0fdf4; 
+    background-color: #fafffa; 
     border: 1px solid #bbf7d0; 
-    border-left: 6px solid #22c55e;
+    border-top: 6px solid #22c55e;
+}
+.diff-content p {
+    margin-bottom: 12px;
+    line-height: 1.6;
+    font-size: 15px;
+}
+.diff-tag {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    display: block;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -231,11 +247,10 @@ enable_email = st.sidebar.checkbox("Enable EnergyLens Email Alerts", value=False
 # =====================================================================
 # MAIN DASHBOARD
 # =====================================================================
-st.markdown("<h1><span class='brand-text'>EnergyLens</span> HVAC Monitor</h1>", unsafe_allow_html=True)
+st.markdown("<h1><span class='brand-text'>EnergyLens</span> Intelligence</h1>", unsafe_allow_html=True)
 st.caption("Energy Wastage Intelligence for Smart Buildings")
 
 # --- NAVIGATION TABS ---
-# This addresses the committee question: "Is this just another FDD tool?"
 tabs = st.tabs(["📊 Live Intelligence", "🛡️ Strategic Differentiation (EnergyLens vs FDD)"])
 
 with tabs[0]:
@@ -267,14 +282,14 @@ with tabs[0]:
     )
 
     # =====================================================================
-    # DATA LOAD
+    # DATA LOAD & SAFETY MERGE
     # =====================================================================
-    p_df, _ = load_latest_csv(os.path.join(BASE_PATH, "power"))
-    s_df, _ = load_latest_csv(os.path.join(BASE_PATH, "status"))
-    t_df, _ = load_latest_csv(os.path.join(BASE_PATH, "temp"))
-    v_df, _ = load_latest_csv(os.path.join(BASE_PATH, "valve"))
+    p_df_raw, _ = load_latest_csv(os.path.join(BASE_PATH, "power"))
+    s_df_raw, _ = load_latest_csv(os.path.join(BASE_PATH, "status"))
+    t_df_raw, _ = load_latest_csv(os.path.join(BASE_PATH, "temp"))
+    v_df_raw, _ = load_latest_csv(os.path.join(BASE_PATH, "valve"))
 
-    if any(x is None for x in [p_df, s_df, t_df, v_df]):
+    if any(x is None for x in [p_df_raw, s_df_raw, t_df_raw, v_df_raw]):
         st.error("EnergyLens could not detect live data streams. Please verify folder mapping.")
         st.stop()
 
@@ -284,12 +299,19 @@ with tabs[0]:
     # SCENARIO 1 — SCHEDULE DRIFT
     # =====================================================================
     if "Schedule Drift" in scenario:
+        p_df = p_df_raw.copy()
+        s_df = s_df_raw.copy()
         p_df["T_Stamp"] = pd.to_datetime(p_df["T_Stamp"])
         p_df = p_df.set_index("T_Stamp").resample("1h").mean()
         s_df["Log_Time"] = pd.to_datetime(s_df["Log_Time"])
         s_df = s_df.set_index("Log_Time").resample("1h").ffill()
 
         df = pd.concat([p_df, s_df], axis=1, sort=False).dropna()
+        
+        # COLUMN SAFETY: Handle KeyError 'Value_y' or variable header names
+        # We rename to standard internal keys
+        cols = list(df.columns)
+        # Power is usually the first col from p_df, Status from s_df
         df.columns = ["Power_kW", "Unit_Status"]
 
         df["Actual_Status"] = np.where(df["Unit_Status"] > 0.5, "ON", "OFF")
@@ -360,12 +382,15 @@ with tabs[0]:
     # SCENARIO 2 — EXCESSIVE COOLING
     # =====================================================================
     elif "Excessive Cooling" in scenario:
+        t_df = t_df_raw.copy()
+        v_df = v_df_raw.copy()
         t_df["Timestamp"] = pd.to_datetime(t_df["Timestamp"])
         t_df = t_df.set_index("Timestamp").resample("15min").interpolate()
         v_df["Log_Time"] = pd.to_datetime(v_df["Log_Time"])
         v_df = v_df.set_index("Log_Time").resample("15min").ffill()
 
         df = pd.concat([t_df, v_df], axis=1, sort=False).dropna()
+        # COLUMN SAFETY: Standardize headers
         df.columns = ["Room_Temp", "Setpoint", "Valve_Position"]
 
         df["Fault"] = (df["Room_Temp"] < df["Setpoint"] - 1) & (df["Valve_Position"] > 80)
@@ -427,74 +452,118 @@ with tabs[0]:
             st.write("• Energy Density (kWh/m²)")
             st.write("• Coefficient of Performance (COP) Drift")
             st.write("• Carbon Intensity Reduction")
-        
-        st.divider()
-        st.image("https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1000", caption="EnergyLens Intelligence Roadmap Validation")
 
 with tabs[1]:
     # =====================================================================
-    # STRATEGIC DIFFERENTIATION SLIDE (FOR COMMITTEE)
+    # STRATEGIC DIFFERENTIATION SLIDE (FIXED UI)
     # =====================================================================
     st.subheader("Positioning: EnergyLens vs. Fault Detection & Diagnostics (FDD)")
-    st.markdown("To ensure we aren't dismissed as 'just another FDD tool', we pivot from *maintenance* to *operational intent*.")
+    st.markdown("Address committee concerns by shifting the focus from 'Maintenance' to 'Operational Intent'.")
 
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="diff-box fdd-box">
-            <h4 style="color: #475569; margin-bottom:5px;">Traditional FDD Tools</h4>
-            <p style="font-size: 0.9em; color: #64748b; font-style: italic;">(Maintenance Logic)</p>
-            <hr style="border:0.5px solid #e2e8f0; margin: 15px 0;">
-            <p><b>Focus:</b> Asset Health & Hardware Reliability</p>
-            <p><b>Core Question:</b> "Is the equipment broken?"</p>
-            <p><b>Triggers:</b> Sensor failure, motor vibrations, seized valves, communication loss.</p>
-            <p><b>Outcome:</b> Fix the motor / Replace the sensor.</p>
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-top: auto; border: 1px solid #e2e8f0;">
-                <p style="margin:0; font-size:0.9em; color:#475569;"><b>Example Alarm:</b> <br><code style="color: #ef4444;">"AHU-1 Static Pressure Low (Fan Belt Broken)"</code></p>
-            </div>
+   # col1, col2 = st.columns(2)
+
+    components.html("""
+    <div style="display: flex; gap: 15px; font-family: sans-serif;">
+
+    <!-- LEFT -->
+    <div style="
+        flex:1;
+        background:#ffffff;
+        border:1px solid #e2e8f0;
+        border-top:5px solid #64748b;
+        padding:18px;
+        border-radius:10px;
+    ">
+        <span style="font-size:10px; font-weight:700; color:#64748b;">
+            LEGACY FRAMEWORK
+        </span>
+        <h3 style="margin:8px 0; font-size:18px;">Traditional FDD Tools</h3>
+        <p style="color:#64748b; font-style:italic; margin:4px 0;">
+            (Maintenance-Centric Logic)
+        </p>
+
+        <p style="margin:6px 0;"><b>Focus:</b> Hardware integrity & asset health.</p>
+        <p style="margin:6px 0;"><b>Core Question:</b> "Is the equipment broken or failing?"</p>
+        <p style="margin:6px 0;"><b>Triggers:</b> Component failure, sensor disconnects.</p>
+        <p style="margin:6px 0;"><b>Audience:</b> Maintenance Teams.</p>
+
+        <div style="
+            margin-top:12px;
+            padding:10px;
+            background:#f8fafc;
+            border-radius:6px;
+            border:1px solid #e2e8f0;
+        ">
+            <b style="font-size:13px;">Example:</b>
+            <p style="color:#ef4444; font-family:monospace; margin:4px 0;">
+                "Fan belt failure detected."
+            </p>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
 
-    with col2:
-        st.markdown("""
-        <div class="diff-box el-box">
-            <h4 style="color: #166534; margin-bottom:5px;">EnergyLens</h4>
-            <p style="font-size: 0.9em; color: #166534; font-style: italic;">(Operational Intent Logic)</p>
-            <hr style="border:0.5px solid #bbf7d0; margin: 15px 0;">
-            <p><b>Focus:</b> Strategic Justification of Consumption</p>
-            <p><b>Core Question:</b> "Should it be running at all?"</p>
-            <p><b>Triggers:</b> Intent mismatch, logic friction, schedule drift, occupancy mismatch.</p>
-            <p><b>Outcome:</b> Update the strategy / Stop the waste.</p>
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-top: auto; border: 1px solid #bbf7d0;">
-                <p style="margin:0; font-size:0.9em; color:#166534;"><b>Example Alert:</b> <br><code style="color: #10b981;">"AHU-1 Running at 100% Speed (Zone is Empty)"</code></p>
-            </div>
+    <!-- RIGHT -->
+    <div style="
+        flex:1;
+        background:#fafffa;
+        border:1px solid #bbf7d0;
+        border-top:5px solid #22c55e;
+        padding:18px;
+        border-radius:10px;
+    ">
+        <span style="font-size:10px; font-weight:700; color:#166534;">
+            ENERGYLENS
+        </span>
+        <h3 style="margin:8px 0; font-size:18px;">Operational Intent</h3>
+        <p style="color:#166534; font-style:italic; margin:4px 0;">
+            (Energy Logic)
+        </p>
+
+        <p style="margin:6px 0;"><b>Focus:</b> Energy justification.</p>
+        <p style="margin:6px 0;"><b>Question:</b> "Should it run?"</p>
+        <p style="margin:6px 0;"><b>Triggers:</b> Schedule drift, mismatch.</p>
+        <p style="margin:6px 0;"><b>Audience:</b> ESG, CFO.</p>
+
+        <div style="
+            margin-top:12px;
+            padding:10px;
+            background:#ffffff;
+            border-radius:6px;
+            border:1px solid #bbf7d0;
+        ">
+            <b style="font-size:13px;">Insight:</b>
+            <p style="color:#10b981; font-family:monospace; margin:4px 0;">
+                "Running in empty zone."
+            </p>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
 
-    st.markdown("---")
-    st.markdown("### The 'Gap' EnergyLens Fills")
-    st.write("""
-    **Buildings don't just waste energy when they fail — they waste energy even when everything is working perfectly.**
+</div>
+""", height=280)
     
-    FDD tells you when a machine stops working correctly. EnergyLens tells you when a perfectly healthy machine is consuming energy that the building **did not need to use**. We detect the invisible "grey zone" of wastage that exists between hardware health and comfort logic.
+    st.markdown("""
+    ### The 'Intent' Value Proposition
+    Existing tools tell you when a building is **failing**. EnergyLens tells you when a building is **wasting** while working perfectly.
+    * **FDD Case:** A temperature sensor is disconnected (High Alarm).
+    * **EnergyLens Case:** A building is cooled to 19°C on a weekend when occupancy is zero. The equipment is healthy, but the **Operational Intent** is broken.
     """)
-    st.info("💡 **Presentation Tip:** Use this tab if a committee member asks: 'Don't BMS systems already have fault detection built-in?'")
 
 # =====================================================================
 # EXPORT & FOOTER
 # =====================================================================
 st.divider()
 with st.expander("📥 Export Evidence for Reporting"):
-    export_df = df if 'df' in locals() else pd.DataFrame()
-    st.dataframe(export_df, width='stretch')
-    if not export_df.empty:
-        st.download_button(
-            "Download EnergyLens Audit CSV",
-            export_df.to_csv().encode("utf-8"),
-            file_name="energylens_audit_report.csv",
-            mime="text/csv"
-        )
+    try:
+        export_df = df if 'df' in locals() else pd.DataFrame()
+        st.dataframe(export_df, width='stretch')
+        if not export_df.empty:
+            st.download_button(
+                "Download EnergyLens Audit CSV",
+                export_df.to_csv().encode("utf-8"),
+                file_name="energylens_audit_report.csv",
+                mime="text/csv"
+            )
+    except:
+        st.write("No report data generated in this session.")
 
 st.markdown(
     f"<p style='text-align: center; color: #64748b; font-size: 12px; margin-top: 50px;'>"
