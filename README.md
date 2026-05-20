@@ -150,4 +150,4 @@ If this is relevant to your organisation, reach out: **rvij007@aucklanduni.ac.nz
 EnergyLens is an early-stage operational intelligence startup focused on reducing unnecessary energy use in commercial buildings across New Zealand and beyond.
 
 **Founder:** Ravi Raj — background in industrial automation, real-time operational systems, and AI.  
-**Website:** [energylens.co.nz](https://ravi223008.github.io/energylens-website/)
+**Website:** [energylens.co.nz]()
