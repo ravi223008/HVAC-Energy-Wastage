@@ -1,8 +1,8 @@
-# HVAC Energy Wastage Detection (Infralytix – Proof of Concept)
+# HVAC Energy Wastage Detection (EnergyLens – Proof of Concept)
 
 ## Overview
 
-This project is an initial proof-of-concept developed as part of the **Infralytix (EnergyLens)** idea, which aims to identify potential inefficiencies in HVAC system operation using data-driven analysis.
+This project is an initial proof-of-concept developed as part of the **EnergyLens** idea, which aims to identify potential inefficiencies in HVAC system operation using data-driven analysis.
 
 In large facilities, HVAC systems often operate correctly according to control logic but may still consume energy during periods where operational demand is low.
 
@@ -127,7 +127,7 @@ This project demonstrates how an additional analytics layer can help bridge the 
 
 ## About
 
-This project is part of an early-stage exploration of the **Infralytix / EnergyLens** concept, which aims to provide a read-only analytics layer for building energy optimisation.
+This project is part of an early-stage exploration of the **EnergyLens** concept, which aims to provide a read-only analytics layer for building energy optimisation.
 
 ---
 
