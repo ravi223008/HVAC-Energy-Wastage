@@ -99,7 +99,6 @@ This repository contains the working proof-of-concept dashboard built with Pytho
 ✅ Multiple waste detection scenarios implemented  
 ✅ NZ electricity and carbon factor modelling  
 ✅ Scenario-based findings with cost, kWh, and CO₂e outputs  
-✅ Selected for University of Auckland Velocity Ideas Challenge  
 ✅ Reviewed by Auckland Momentum Investment Committee  
 
 🔄 Seeking first pilot partner for real building data validation  
@@ -150,4 +149,4 @@ If this is relevant to your organisation, reach out: **rvij007@aucklanduni.ac.nz
 EnergyLens is an early-stage operational intelligence startup focused on reducing unnecessary energy use in commercial buildings across New Zealand and beyond.
 
 **Founder:** Ravi Raj — background in industrial automation, real-time operational systems, and AI.  
-**Website:** [energylens.co.nz](https://ravi223008.github.io/energylens-website/)
+**Website:** [energylens.co.nz](https://ravi223008.github.io/infralytix-website/)
